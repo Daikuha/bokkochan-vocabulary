@@ -1,0 +1,540 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ボッコ単語帳ver.52</title><style>
+    html,body{height:100%;overflow:hidden}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Hiragino Sans','Noto Sans CJK JP',sans-serif;font-size:28pt;line-height:2;margin:0;display:flex;flex-direction:column;background-color:#f4f7f9}
+    body.vocab-mode .accordion-toggle { font-size: 1.5rem; font-weight: bold; }
+    .media-pane{height:0;position:relative;display:flex;justify-content:center;align-items:center;background-color:#000;flex-shrink:0}
+    .media-pane img,.media-pane video{width:100%;height:100%;object-fit:contain}
+    .content-pane{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+    .controls-area{display:none;height:5vh;justify-content:space-between;align-items:center;padding:0 20px;background-color:#fff;border-bottom:1px solid #ddd;flex-shrink:0}.controls-area .title{font-size:1rem;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .content-body{flex-grow:1;overflow-y:auto;padding:20px 30px 40px;height:95vh;font-size:28pt;transition:font-size .2s}
+    .paragraph-container{border-bottom:1px solid #eee;padding:2px 10px; transition: opacity 0.3s ease, padding .2s ease; position: relative;}.paragraph-container:last-child{border-bottom:none}.paragraph-container.has-media{cursor:pointer;transition:background-color .2s, opacity 0.3s ease, padding .2s ease;}.paragraph-container.has-media:hover{background-color:#e9ecef}.paragraph-container.active{background-color:#cce7ff;}
+    .content-body.wide-spacing .paragraph-container { padding: 15px 10px; }
+    .paragraph-container.is-flex { display: flex; }
+    .paragraph-container.justify-start { justify-content: flex-start; }
+    .paragraph-container.justify-end { justify-content: flex-end; }
+    .paragraph-container.justify-center { justify-content: center; }
+    .paragraph-container.speaker-muted .speech-bubble { border-style: dashed; }
+    .paragraph-container.speaker-muted::after {
+        content: 'U';
+        position: absolute;
+        top: 0;
+        font-size: 0.5em;
+        font-weight: bold;
+        color: white;
+        background-color: rgba(0, 0, 0, 0.4);
+        padding: 1px 6px;
+        border-radius: 5px;
+        line-height: 1;
+        z-index: 10;
+    }
+    .paragraph-container.justify-start.speaker-muted::after { left: 5px; }
+    .paragraph-container.justify-end.speaker-muted::after { right: 5px; }
+    .japanese-line { display: flex; align-items: center; width: 100%; }
+    .japanese-p{transition:opacity .3s; margin:0; flex: 1; min-width: 0; word-break: break-word;}.romaji-text{font-size:.8em;color:#6f42c1;line-height:1.1;margin:0}.english-translation{font-size:.8em;color:#15803d;line-height:1.1;margin:0}.time-stamp{font-size:.7em;color:#888;margin-right:10px;font-weight:400}
+    .blank{cursor:pointer;color:transparent;border-bottom:2px solid #007bff;padding:0 2px;transition:background-color .2s;user-select:none}.blank:hover{background-color:#e7f3ff}.answer-text{color:#dc3545;font-weight:700;border-bottom:2px solid transparent}
+    .accordion-toggle{width:100%;background-color:#e9ecef;border:none;border-bottom:1px solid #ddd;padding:15px 20px;font-size:1.2rem;font-weight:700;text-align:left;cursor:pointer;transition:background-color .2s, font-size .2s;position:relative;color:#333}.accordion-toggle:hover{background-color:#ced4da}.accordion-toggle::after{content:'▼';position:absolute;right:20px;transition:transform .3s}.accordion-toggle.active::after{transform:rotate(180deg)}.accordion-panel{max-height:0;overflow:hidden;transition:max-height .3s ease-out;border-bottom:1px solid #ddd}
+    ruby rt { visibility: hidden; font-size: 0.6em; user-select: none; }.content-body.ruby-visible ruby rt { visibility: visible; }
+    
+    body.image-fullscreen .media-pane{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:1000;background-color:rgba(0,0,0,0.8)}
+    body.image-fullscreen .content-pane{display:none}
+    body.text-fullscreen .media-pane{display:none}
+    body.text-fullscreen .content-pane{height:100vh}
+    
+    .content-body.all-text-off .speech-bubble {
+        min-width: 10ch;
+        min-height: 1.6em;
+    }
+    .content-body.all-text-off .narration {
+        min-height: 1.6em;
+    }
+    
+    /* --- Conversation Mode Styles --- */
+    .speech-bubble { position: relative; padding: 10px 18px; border-radius: 18px; margin: 2px 15px; max-width: 100%; line-height: 1.6; box-shadow: 0 2px 4px rgba(0,0,0,0.08); display: block; border: 1px solid #555; transition: margin .2s ease, padding .2s ease; }
+    .content-body.wide-spacing .speech-bubble { margin: 10px 15px; padding: 15px 20px; }
+    .content-body.wide-spacing .romaji-text, .content-body.wide-spacing .english-translation { margin-top: 10px; line-height: 1.6; }
+    .speech-bubble::before, .speech-bubble::after { content: ''; position: absolute; top: 15px; width: 0; height: 0; border-style: solid; border-color: transparent; }
+    .narration { text-align: center; color: #65676b; font-style: italic; margin: 5px 0; padding: 0 10%; display: flex; align-items: center; justify-content: center; transition: margin .2s ease; word-break: break-word; }
+    .content-body.wide-spacing .narration { margin: 20px 0; }
+    
+    /* Left-aligned speakers */
+    .speaker-a, .speaker-c, .speaker-e { text-align: left; }
+    /* Left speaker tail BORDER */
+    .speaker-a::before, .speaker-c::before, .speaker-e::before { left: -20px; border-width: 10px 18px 10px 0; border-right-color: #555; }
+    /* Left speaker tail FILL */
+    .speaker-a::after, .speaker-c::after, .speaker-e::after { left: -19px; border-width: 10px 18px 10px 0; }
+    .speaker-a { background-color: #FFECF5; } /* Pink */
+    .speaker-a::after { border-right-color: #FFECF5; }
+    .speaker-c { background-color: #F0FFF0; } /* Mint Green */
+    .speaker-c::after { border-right-color: #F0FFF0; }
+    .speaker-e { background-color: #F5F5FF; } /* Lavender */
+    .speaker-e::after { border-right-color: #F5F5FF; }
+    
+    /* Right-aligned speakers */
+    .speaker-b, .speaker-d, .speaker-f { text-align: left; }
+    /* Right speaker tail BORDER */
+    .speaker-b::before, .speaker-d::before, .speaker-f::before { right: -20px; border-width: 10px 0 10px 18px; border-left-color: #555; }
+    /* Right speaker tail FILL */
+    .speaker-b::after, .speaker-d::after, .speaker-f::after { right: -19px; border-width: 10px 0 10px 18px; }
+    .speaker-b { background-color: #E0F7FA; } /* Light Blue */
+    .speaker-b::after { border-left-color: #E0F7FA; }
+    .speaker-d { background-color: #FFF3E0; } /* Peach */
+    .speaker-d::after { border-left-color: #FFF3E0; }
+    .speaker-f { background-color: #FFFDE7; } /* Light Yellow */
+    .speaker-f::after { border-left-color: #FFFDE7; }
+    
+    @media (max-width:768px){body, .content-body{font-size:22pt}}</style></head><body class="vocab-mode">
+    <div class="media-pane">
+    
+    
+    </div>
+    <div class="content-pane">
+    
+    <div class="controls-area"><span class="title">ボッコ単語帳ver.52</span></div>
+    <div class="content-body" id="content"><div class="accordion-item"><button class="accordion-toggle">あらゆる</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>全<rt>ぜん</rt>部<rt>ぶ</rt></ruby>（すべて）の。<ruby>一<rt>ひと</rt></ruby>つ<ruby>残<rt>のこ</rt></ruby>らず。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: あらゆる<ruby>種<rt>しゅ</rt>類<rt>るい</rt></ruby>の<ruby>本<rt>ほん</rt></ruby>が、この<ruby>店<rt>みせ</rt></ruby>にはあります。</p>
+                                        <p class="english-translation" style="display: none;">Eng: Every kind of book is available at this store.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">もっとも</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: 「そうだけど」という<ruby>意味<rt>いみ</rt></ruby>。<ruby>前<rt>まえ</rt>言<rt>い</rt></ruby>ったことの<ruby>補<rt>ほ</rt>足<rt>そく</rt></ruby>や<ruby>訂<rt>てい</rt>正<rt>せい</rt></ruby>をする<ruby>時<rt>とき</rt></ruby>に<ruby>使<rt>つか</rt></ruby>う。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>私<rt>わたし</rt></ruby>は<ruby>旅<rt>りょ</rt>行<rt>こう</rt></ruby>が<ruby>好<rt>す</rt></ruby>きだ。もっとも、<ruby>高<rt>たか</rt></ruby>いホテルには<ruby>泊<rt>と</rt></ruby>まれない。</p>
+                                        <p class="english-translation" style="display: none;">Eng: I like traveling. However, I can't stay in expensive hotels.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">つんと</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>人<rt>ひと</rt></ruby>に<ruby>冷<rt>つめ</rt></ruby>たく、<ruby>関<rt>かん</rt>心<rt>しん</rt></ruby>がない<ruby>態<rt>たい</rt>度<rt>ど</rt></ruby>をとる<ruby>様<rt>よう</rt>子<rt>す</rt></ruby>。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>彼<rt>かの</rt>女<rt>じょ</rt></ruby>は<ruby>話<rt>はな</rt></ruby>しかけても、つんとした<ruby>顔<rt>かお</rt></ruby>で<ruby>無<rt>む</rt>視<rt>し</rt></ruby>した。</p>
+                                        <p class="english-translation" style="display: none;">Eng: Even when I talked to her, she ignored me with a cold/haughty look.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle"><ruby>道<rt>どう</rt>楽<rt>らく</rt></ruby></button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>趣<rt>しゅ</rt>味<rt>み</rt></ruby>や<ruby>遊<rt>あそ</rt></ruby>びに<ruby>夢<rt>む</rt>中<rt>ちゅう</rt></ruby>になること。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>彼<rt>かれ</rt></ruby>はゴルフを<ruby>道<rt>どう</rt>楽<rt>らく</rt></ruby>にしていて、<ruby>週<rt>しゅう</rt>末<rt>まつ</rt></ruby>はいつも<ruby>練<rt>れん</rt>習<rt>しゅう</rt></ruby>に<ruby>行<rt>い</rt></ruby>く。</p>
+                                        <p class="english-translation" style="display: none;">Eng: He makes golf his hobby, and always goes to practice on weekends.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle"><ruby>見<rt>み</rt>分<rt>わ</rt></ruby>け</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>違<rt>ちが</rt></ruby>うものや、<ruby>似<rt>に</rt></ruby>ているものの<ruby>中<rt>なか</rt></ruby>から、<ruby>正<rt>ただ</rt></ruby>しいものや<ruby>本<rt>ほん</rt>物<rt>もの</rt></ruby>を<ruby>見<rt>み</rt></ruby>つけ<ruby>出<rt>だ</rt></ruby>すこと。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>本<rt>ほん</rt>物<rt>もの</rt></ruby>と<ruby>偽<rt>にせ</rt>物<rt>もの</rt></ruby>の<ruby>見<rt>み</rt>分<rt>わ</rt></ruby>けが<ruby>難<rt>むずか</rt></ruby>しい。</p>
+                                        <p class="english-translation" style="display: none;">Eng: It is difficult to distinguish between the real thing and the fake.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">むしろ</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>二<rt>ふた</rt></ruby>つのことを<ruby>比<rt>くら</rt></ruby>べて、「こっちの<ruby>方<rt>ほう</rt></ruby>がいい（<ruby>正<rt>ただ</rt></ruby>しい）」と<ruby>強<rt>つよ</rt></ruby>く<ruby>言<rt>い</rt></ruby>いたい<ruby>時<rt>とき</rt></ruby>に<ruby>使<rt>つか</rt></ruby>う。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>外<rt>そと</rt></ruby>で<ruby>待<rt>ま</rt></ruby>つより、むしろ<ruby>家<rt>いえ</rt></ruby>の<ruby>中<rt>なか</rt></ruby>で<ruby>待<rt>ま</rt></ruby>った<ruby>方<rt>ほう</rt></ruby>がいい。</p>
+                                        <p class="english-translation" style="display: none;">Eng: Rather than waiting outside, it's better to wait inside the house.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle"><ruby>空<rt>から</rt></ruby>っぽ</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>容<rt>よう</rt>器<rt>き</rt></ruby>や<ruby>場<rt>ば</rt>所<rt>しょ</rt></ruby>などに、<ruby>何<rt>なに</rt></ruby>も<ruby>入<rt>はい</rt></ruby>っていないこと。から。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>財<rt>さい</rt>布<rt>ふ</rt></ruby>が<ruby>空<rt>から</rt></ruby>っぽになってしまった。</p>
+                                        <p class="english-translation" style="display: none;">Eng: My wallet has become empty.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle"><ruby>手<rt>て</rt></ruby>が<ruby>回<rt>まわ</rt></ruby>る</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>必<rt>ひつ</rt>要<rt>よう</rt></ruby>なところまで<ruby>全<rt>ぜん</rt>部<rt>ぶ</rt></ruby>、<ruby>注<rt>ちゅう</rt>意<rt>い</rt></ruby>や<ruby>準<rt>じゅん</rt>備<rt>び</rt></ruby>が<ruby>行<rt>い</rt></ruby>き<ruby>届<rt>とど</rt></ruby>くこと。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>仕<rt>し</rt>事<rt>ごと</rt></ruby>が<ruby>忙<rt>いそが</rt></ruby>しすぎて、<ruby>家<rt>か</rt>事<rt>じ</rt></ruby>まで<ruby>手<rt>て</rt></ruby>が<ruby>回<rt>まわ</rt></ruby>らない。</p>
+                                        <p class="english-translation" style="display: none;">Eng: I'm too busy with work, so I can't take care of the housework.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">ぼろ</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: 1. <ruby>古<rt>ふる</rt></ruby>くて<ruby>破<rt>やぶ</rt></ruby>れた<ruby>服<rt>ふく</rt></ruby>や<ruby>布<rt>ぬの</rt></ruby>。2. <ruby>議<rt>ぎ</rt>論<rt>ろん</rt></ruby>や<ruby>計<rt>けい</rt>画<rt>かく</rt></ruby>の<ruby>欠<rt>けっ</rt>点<rt>てん</rt></ruby>、<ruby>弱<rt>じゃく</rt>点<rt>てん</rt></ruby>。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>彼<rt>かれ</rt></ruby>の<ruby>話<rt>はなし</rt></ruby>のぼろを<ruby>見<rt>み</rt></ruby>つけた。</p>
+                                        <p class="english-translation" style="display: none;">Eng: I found a flaw (mistake or contradiction) in his story.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">そっけない</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>人<rt>ひと</rt></ruby>に<ruby>対<rt>たい</rt></ruby>して<ruby>冷<rt>つめ</rt></ruby>たく、<ruby>簡<rt>かん</rt>単<rt>たん</rt></ruby>な<ruby>返<rt>へん</rt>事<rt>じ</rt></ruby>や<ruby>態<rt>たい</rt>度<rt>ど</rt></ruby>で<ruby>終<rt>お</rt></ruby>わらせる<ruby>様<rt>よう</rt>子<rt>す</rt></ruby>。（<ruby>素<rt>そ</rt></ruby><ruby>気<rt>っけ</rt></ruby>ないの<ruby>表<rt>ひょう</rt>記<rt>き</rt></ruby>もよく<ruby>使<rt>つか</rt></ruby>われる。）</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>彼<rt>かれ</rt></ruby>は<ruby>私<rt>わたし</rt></ruby>の<ruby>質<rt>しつ</rt>問<rt>もん</rt></ruby>にそっけない<ruby>返<rt>へん</rt>事<rt>じ</rt></ruby>をした。</p>
+                                        <p class="english-translation" style="display: none;">Eng: He gave a curt/blunt reply to my question.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">からかう</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>相<rt>あい</rt>手<rt>て</rt></ruby>が<ruby>困<rt>こま</rt></ruby>ったり<ruby>恥<rt>は</rt></ruby>ずかしがったりするようなことを<ruby>言<rt>い</rt></ruby>って、<ruby>楽<rt>たの</rt></ruby>しむこと。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>友<rt>とも</rt>達<rt>だち</rt></ruby>をからかって、みんなで<ruby>笑<rt>わら</rt></ruby>った。</p>
+                                        <p class="english-translation" style="display: none;">Eng: We teased our friend and everyone laughed.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">つじつま</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味<: <ruby>話<rt>はな</rt></ruby>しや<ruby>行<rt>こう</rt>動<rt>どう</rt></ruby>の<ruby>前<rt>ぜん</rt>後<rt>ご</rt></ruby>が<ruby>矛<rt>む</rt>盾<rt>じゅん</rt></ruby>せず、<ruby>論<rt>ろん</rt>理<rt>り</rt>的<rt>てき</rt></ruby>に<ruby>合<rt>あ</rt></ruby>っていること。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>彼<rt>かれ</rt></ruby>の<ruby>言<rt>い</rt></ruby>い<ruby>訳<rt>わけ</rt></ruby>はつじつまが<ruby>合<rt>あ</rt></ruby>わない。</p>
+                                        <p class="english-translation" style="display: none;">Eng: His excuse lacks coherence (or doesn't make sense).</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">しゃがむ</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>膝<rt>ひざ</rt></ruby>を<ruby>曲<rt>ま</rt></ruby>げて<ruby>腰<rt>こし</rt></ruby>を<ruby>落<rt>お</rt></ruby>とし、<ruby>低<rt>ひく</rt></ruby>い<ruby>姿<rt>し</rt>勢<rt>せい</rt></ruby>になること。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>子<rt>こ</rt>供<rt>ども</rt></ruby>は<ruby>地<rt>じ</rt>面<rt>めん</rt></ruby>にしゃがんで、アリを<ruby>見<rt>み</rt></ruby>ていた。</p>
+                                        <p class="english-translation" style="display: none;">Eng: The child crouched down on the ground and watched the ants.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">べたべた</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>人<rt>ひと</rt></ruby>に<ruby>親<rt>しん</rt>密<rt>みつ</rt></ruby>すぎる<ruby>態<rt>たい</rt>度<rt>ど</rt></ruby>で<ruby>接<rt>せっ</rt></ruby>したり、しつこく<ruby>絡<rt>から</rt></ruby>んだり、<ruby>媚<rt>こ</rt></ruby>びたりする<ruby>様<rt>よう</rt>子<rt>す</rt></ruby>。 もともとは<ruby>物<rt>もの</rt></ruby>が<ruby>粘<rt>ねば</rt></ruby>りつく<ruby>様<rt>よう</rt>子<rt>す</rt></ruby>。)</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>上<rt>じょう</rt>司<rt>し</rt></ruby>にべたべた<ruby>付<rt>つ</rt></ruby>き<ruby>纏<rt>まと</rt></ruby>う<ruby>社<rt>しゃ</rt>員<rt>いん</rt></ruby>は、みんなから<ruby>嫌<rt>きら</rt></ruby>われている。</p>
+                                        <p class="english-translation" style="display: none;">Eng: The employee who constantly fawns over or sticks close to the boss is disliked by everyone.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle"><ruby>お<rt>お</rt>世<rt>せ</rt>辞<rt>じ</rt></ruby></button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>相<rt>あい</rt>手<rt>て</rt></ruby>に<ruby>気<rt>き</rt></ruby>に<ruby>入<rt>い</rt></ruby>られたり、<ruby>気<rt>き</rt>持<rt>も</rt></ruby>ちよくさせたりするために<ruby>言<rt>い</rt></ruby>う、ほめ<ruby>言<rt>こと</rt>葉<rt>ば</rt></ruby>。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>彼<rt>かの</rt>女<rt>じょ</rt></ruby>は<ruby>お<rt>お</rt>世<rt>せ</rt>辞<rt>じ</rt></ruby>を<ruby>言<rt>い</rt></ruby>っても、<ruby>決<rt>けっ</rt></ruby>して<ruby>信<rt>しん</rt></ruby>じない。</p>
+                                        <p class="english-translation" style="display: none;">Eng: Even if someone gives her flattery, she never believes it.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle"><ruby>通<rt>かよ</rt></ruby>い<ruby>詰<rt>つ</rt></ruby>める</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: ある<ruby>場<rt>ば</rt>所<rt>しょ</rt></ruby>に、<ruby>非<rt>ひ</rt>常<rt>じょう</rt></ruby>に<ruby>熱<rt>ねっ</rt>心<rt>しん</rt></ruby>に、<ruby>頻<rt>ひん</rt>繁<rt>ぱん</rt></ruby>に<ruby>何<rt>なん</rt>度<rt>ど</rt></ruby>も<ruby>通<rt>かよ</rt></ruby>い<ruby>続<rt>つづ</rt></ruby>けること。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>彼<rt>かれ</rt></ruby>は<ruby>好<rt>す</rt></ruby>きなレストランに<ruby>通<rt>かよ</rt></ruby>い<ruby>詰<rt>つ</rt></ruby>めている。</p>
+                                        <p class="english-translation" style="display: none;">Eng: He frequents his favorite restaurant (or keeps going to his favorite restaurant).</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">かえって</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: <ruby>予<rt>よ</rt>想<rt>そう</rt></ruby>したのとは<ruby>反<rt>はん</rt>対<rt>たい</rt></ruby>に、<ruby>逆<rt>ぎゃく</rt></ruby>の<ruby>結<rt>けっ</rt>果<rt>か</rt></ruby>になってしまう<ruby>様<rt>よう</rt>子<rt>す</rt></ruby>。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>親<rt>しん</rt>切<rt>せつ</rt></ruby>のつもりだったが、かえって<ruby>彼<rt>かれ</rt></ruby>を<ruby>怒<rt>おこ</rt></ruby>らせてしまった。</p>
+                                        <p class="english-translation" style="display: none;">Eng: I intended to be kind, but I unexpectedly made him angry instead.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle"><ruby>勘<rt>かん</rt>定<rt>じょう</rt></ruby></button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: 1. お<ruby>金<rt>かね</rt></ruby>の<ruby>合<rt>ごう</rt>計<rt>けい</rt>額<rt>がく</rt></ruby>を<ruby>数<rt>かぞ</rt></ruby>えること。2. レストランなどで<ruby>支<rt>し</rt>払<rt>はら</rt></ruby>うお<ruby>金<rt>かね</rt></ruby>（お<ruby>会<rt>かい</rt>計<rt>けい</rt></ruby>）。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: レストランで<ruby>勘<rt>かん</rt>定<rt>じょう</rt></ruby>をお<ruby>願<rt>ねが</rt></ruby>いした。</p>
+                                        <p class="english-translation" style="display: none;">Eng: I asked for the bill at the restaurant.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">こっぴどく</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: とても<ruby>厳<rt>きび</rt></ruby>しく、<ruby>手<rt>て</rt>加<rt>か</rt>減<rt>げん</rt></ruby>なしに<ruby>叱<rt>しか</rt></ruby>ったり<ruby>罰<rt>ばっ</rt></ruby>したりする<ruby>様<rt>よう</rt>子<rt>す</rt></ruby>。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>彼<rt>かれ</rt></ruby>は<ruby>試<rt>し</rt>合<rt>あい</rt></ruby>に<ruby>負<rt>ま</rt></ruby>けて、コーチにこっぴどく<ruby>怒<rt>おこ</rt></ruby>られた。</p>
+                                        <p class="english-translation" style="display: none;">Eng: He lost the game and was harshly/severely scolded by the coach.</p>
+                                    </div></div></div><div class="accordion-item"><button class="accordion-toggle">しるし</button><div class="accordion-panel"><div class="paragraph-container"  >
+                                        <div class="japanese-line">
+                                            
+                                            <p class="japanese-p">意味: 1. <ruby>目<rt>め</rt>印<rt>じるし</rt></ruby>、サイン。2. <ruby>効<rt>こう</rt>果<rt>か</rt></ruby>や<ruby>効<rt>き</rt></ruby>き<ruby>目<rt>め</rt></ruby>。3. <ruby>証<rt>しょう</rt>拠<rt>こ</rt></ruby>。</p>
+                                        </div>
+                                        <p class="romaji-text" style="display: none;"><ruby>例文<rt>れいぶん</rt></ruby>: <ruby>努<rt>ど</rt>力<rt>りょく</rt></ruby>したしるしとして、ご<ruby>褒<rt>ほう</rt>美<rt>び</rt></ruby>をもらった。</p>
+                                        <p class="english-translation" style="display: none;">Eng: I received a reward as a sign/proof of my efforts.</p>
+                                    </div></div></div></div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const MEDIA_MIME_TYPE = "";
+        
+        function base64ToBlob(base64, mimeType) {
+            try {
+                const byteCharacters = atob(base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                return new Blob([byteArray], { type: mimeType });
+            } catch (e) {
+                console.error('Failed to decode base64 string:', e);
+                return null;
+            }
+        }
+    
+        const mediaPlayer = document.getElementById('media-player');
+        const mediaDataElement = document.getElementById('media-data');
+        if (mediaPlayer && mediaDataElement && mediaDataElement.textContent) {
+            const base64Data = mediaDataElement.textContent;
+            const mediaBlob = base64ToBlob(base64Data, MEDIA_MIME_TYPE);
+            if (mediaBlob) {
+                const blobUrl = URL.createObjectURL(mediaBlob);
+                mediaPlayer.src = blobUrl;
+                window.addEventListener('unload', () => { if(blobUrl) URL.revokeObjectURL(blobUrl); });
+            } else {
+                const contentPane = document.querySelector('.content-pane');
+                if(contentPane) contentPane.innerHTML = '<p style="color: red; text-align: center; padding-top: 20px;">メディアファイルの読み込みに失敗しました。</p>';
+            }
+        }
+    
+        const contentBody = document.getElementById('content');
+        const mediaPane = document.querySelector('.media-pane');
+        
+        const DEFAULT_FONT_SIZE = window.matchMedia("(max-width: 768px)").matches ? 22 : 28;
+        const MAX_FONT_SIZE = 60;
+
+        let japaneseVisible = true, englishVisible = false, romajiVisible = false, timeVisible = false, rubyVisible = true;
+        let autoScrollEnabled = true;
+        let currentFontSize = DEFAULT_FONT_SIZE;
+        let actionHistory = [];
+        let mutedSpeakers = { a: false, b: false, c: false, d: false, e: false, f: false };
+        let viewMode = 0; // 0: default, 1: image fullscreen, 2: text fullscreen
+        let wideSpacing = false;
+    
+        if (rubyVisible && document.querySelector('ruby')) {
+            contentBody.classList.add('ruby-visible');
+        }
+
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const panel = entry.target;
+                if (panel.style.maxHeight && panel.style.maxHeight !== '0px') {
+                    panel.style.maxHeight = panel.scrollHeight + 'px';
+                }
+            }
+        });
+
+        document.querySelectorAll('.accordion-panel').forEach(panel => {
+            resizeObserver.observe(panel);
+        });
+
+    
+        function updateFontSize() { 
+            contentBody.style.fontSize = currentFontSize + 'pt'; 
+        }
+        
+        function checkAllTextOff() {
+            const romajiElementsExist = !!document.querySelector('.romaji-text');
+            const isRomajiEffectivelyOff = !romajiVisible || !romajiElementsExist;
+    
+            if (!japaneseVisible && !englishVisible && isRomajiEffectivelyOff) {
+                contentBody.classList.add('all-text-off');
+            } else {
+                contentBody.classList.remove('all-text-off');
+            }
+        }
+    
+        function toggleTime() { 
+            if (!document.querySelector('.time-stamp')) return; 
+            timeVisible = !timeVisible; 
+            document.querySelectorAll('.time-stamp').forEach(t => t.style.display = timeVisible ? 'inline' : 'none'); 
+        }
+        function toggleJapanese() { 
+            japaneseVisible = !japaneseVisible; 
+            document.querySelectorAll('.japanese-p, .japanese-text').forEach(t => t.style.display = japaneseVisible ? 'block' : 'none'); 
+            checkAllTextOff();
+        }
+        function toggleEnglish() { 
+            englishVisible = !englishVisible; 
+            document.querySelectorAll('.english-translation').forEach(t => t.style.display = englishVisible ? 'block' : 'none'); 
+            checkAllTextOff();
+        }
+        function toggleRuby() { 
+            if (!document.querySelector('ruby')) return; 
+            rubyVisible = !rubyVisible; 
+            if(rubyVisible) { contentBody.classList.add('ruby-visible'); } else { contentBody.classList.remove('ruby-visible'); } 
+        }
+        function toggleRomaji() { 
+            if (!document.querySelector('.romaji-text')) return; 
+            romajiVisible = !romajiVisible; 
+            document.querySelectorAll('.romaji-text').forEach(t => t.style.display = romajiVisible ? 'block' : 'none'); 
+            checkAllTextOff();
+        }
+        function increaseFontSize() { currentFontSize = Math.min(MAX_FONT_SIZE, currentFontSize + 2); updateFontSize(); }
+        function decreaseFontSize() { currentFontSize = Math.max(10, currentFontSize - 2); updateFontSize(); }
+        function setMaxSize() { currentFontSize = MAX_FONT_SIZE; updateFontSize(); }
+        function setDefaultSize() { currentFontSize = DEFAULT_FONT_SIZE; updateFontSize(); }
+
+        function undoLastAction() {
+            if (actionHistory.length === 0) return;
+            const lastAction = actionHistory.pop();
+            const { parent, replacedNode, originalNode } = lastAction;
+            if (parent && parent.contains(replacedNode)) {
+                replacedNode.replaceWith(originalNode);
+            }
+        }
+        
+        function toggleAllAccordions() {
+            const allToggles = document.querySelectorAll('.accordion-toggle');
+            if (allToggles.length === 0) return;
+
+            const isAllOpen = Array.from(allToggles).every(toggle => toggle.classList.contains('active'));
+
+            allToggles.forEach(toggle => {
+                const panel = toggle.nextElementSibling;
+                if (isAllOpen) {
+                    // Close all
+                    toggle.classList.remove('active');
+                    if (panel) panel.style.maxHeight = null;
+                } else {
+                    // Open all
+                    if (!toggle.classList.contains('active')) {
+                        toggle.classList.add('active');
+                        if (panel) panel.style.maxHeight = panel.scrollHeight + 'px';
+                    }
+                }
+            });
+        }
+
+        function showAllAnswers() {
+            document.querySelectorAll('.blank').forEach(blankElement => {
+                const answer = blankElement.dataset.answer;
+                const answerNode = document.createElement('span');
+                answerNode.className = 'answer-text';
+                answerNode.innerHTML = answer;
+                blankElement.replaceWith(answerNode);
+            });
+            actionHistory = []; 
+        }
+
+        function togglePictureFullscreen() {
+            const hasImage = !!document.querySelector('.switchable-image');
+            const hasVideo = !!document.querySelector('.media-pane video');
+    
+            if (!mediaPane || (!hasImage && !hasVideo)) return;
+    
+            viewMode = (viewMode + 1) % 3;
+    
+            document.body.classList.remove('image-fullscreen', 'text-fullscreen');
+    
+            if (viewMode === 1) {
+                document.body.classList.add('image-fullscreen');
+            } else if (viewMode === 2) {
+                document.body.classList.add('text-fullscreen');
+            }
+        }
+    
+        function toggleSpacing() {
+            wideSpacing = !wideSpacing;
+            contentBody.classList.toggle('wide-spacing', wideSpacing);
+        }
+    
+        function toggleSpeakerMute(speakerKey) {
+            if (!mutedSpeakers.hasOwnProperty(speakerKey)) return;
+            mutedSpeakers[speakerKey] = !mutedSpeakers[speakerKey];
+            document.querySelectorAll('.paragraph-container[data-speaker="' + speakerKey + '"]').forEach(container => {
+                container.classList.toggle('speaker-muted', mutedSpeakers[speakerKey]);
+            });
+            
+            if (mediaPlayer && !mediaPlayer.paused) {
+                const event = new Event('timeupdate');
+                mediaPlayer.dispatchEvent(event);
+            }
+        }
+    
+        function jumpToNextSegment() {
+            if (!mediaPlayer) return;
+            const paragraphs = Array.from(document.querySelectorAll('.paragraph-container.has-media'));
+            if (paragraphs.length === 0) return;
+    
+            const currentActive = document.querySelector('.paragraph-container.active');
+            const currentIndex = currentActive ? paragraphs.indexOf(currentActive) : -1;
+            
+            const nextIndex = currentIndex + 1;
+    
+            if (nextIndex < paragraphs.length) {
+                playSegment(paragraphs[nextIndex]);
+            }
+        }
+    
+        function jumpToPreviousSegment() {
+            if (!mediaPlayer) return;
+            const paragraphs = Array.from(document.querySelectorAll('.paragraph-container.has-media'));
+            if (paragraphs.length === 0) return;
+    
+            const currentActive = document.querySelector('.paragraph-container.active');
+            const currentIndex = currentActive ? paragraphs.indexOf(currentActive) : -1;
+    
+            const prevIndex = currentIndex - 1;
+            
+            if (prevIndex >= 0) {
+                playSegment(paragraphs[prevIndex]);
+            }
+        }
+    
+        function switchImage(imageNumber) {
+            const images = document.querySelectorAll('.switchable-image');
+            if (images.length === 0) return;
+            
+            images.forEach(img => img.style.display = 'none');
+            
+            const targetImage = document.getElementById('main-image-' + imageNumber);
+            if (targetImage) {
+                targetImage.style.display = 'block';
+            }
+        }
+    
+        
+        function togglePlaybackSpeed() {}
+        function toggleAutoScroll() {}
+        
+    
+        contentBody.addEventListener('click', function(e) {
+            if (e.target.classList.contains('blank')) {
+                const blankElement = e.target;
+                const answer = blankElement.dataset.answer;
+                const answerNode = document.createElement('span');
+                answerNode.className = 'answer-text';
+                answerNode.innerHTML = answer;
+                const action = { parent: blankElement.parentNode, replacedNode: answerNode, originalNode: blankElement };
+                actionHistory.push(action);
+                if (actionHistory.length > 3) {
+                    actionHistory.shift();
+                }
+                blankElement.replaceWith(answerNode);
+            }
+        });
+    
+        document.querySelectorAll('.accordion-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                this.classList.toggle('active'); const panel = this.nextElementSibling;
+                panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight + 'px';
+            });
+        });
+    
+        document.addEventListener('keydown', e => {
+            if (e.target.tagName === 'INPUT' || e.target.isContentEditable) return;
+    
+            if (e.shiftKey && e.code.startsWith('Digit')) {
+                e.preventDefault();
+                const digit = e.code.replace('Digit', '');
+                let imageNumber;
+                if (digit === '0') {
+                    imageNumber = 10;
+                } else {
+                    imageNumber = parseInt(digit, 10);
+                }
+                switchImage(imageNumber);
+                return;
+            }
+    
+            switch (e.key.toLowerCase()) {
+                case 'j': e.preventDefault(); toggleJapanese(); break;
+                case 'e': e.preventDefault(); toggleEnglish(); break;
+                case 'b': e.preventDefault(); toggleRuby(); break;
+                case 'r': e.preventDefault(); toggleRomaji(); break;
+                case 't': e.preventDefault(); toggleTime(); break;
+                case 'p': e.preventDefault(); togglePictureFullscreen(); break;
+                case 'w': e.preventDefault(); toggleSpacing(); break;
+                case 'u': e.preventDefault(); undoLastAction(); break;
+                case 'a': e.preventDefault(); toggleAllAccordions(); break;
+                case 'z': e.preventDefault(); showAllAnswers(); break;
+                case 'q': e.preventDefault(); location.reload(); break;
+                case 'm': e.preventDefault(); setMaxSize(); break;
+                case 'n': e.preventDefault(); setDefaultSize(); break;
+                case '1': e.preventDefault(); toggleSpeakerMute('a'); break;
+                case '2': e.preventDefault(); toggleSpeakerMute('b'); break;
+                case '3': e.preventDefault(); toggleSpeakerMute('c'); break;
+                case '4': e.preventDefault(); toggleSpeakerMute('d'); break;
+                case '5': e.preventDefault(); toggleSpeakerMute('e'); break;
+                case '6': e.preventDefault(); toggleSpeakerMute('f'); break;
+                case '+': case '=': e.preventDefault(); increaseFontSize(); break;
+                case '-': e.preventDefault(); decreaseFontSize(); break;
+                case 'x': e.preventDefault(); togglePlaybackSpeed(); break;
+                case 's': e.preventDefault(); toggleAutoScroll(); break;
+                case 'arrowup': e.preventDefault(); jumpToPreviousSegment(); break;
+                case 'arrowdown': e.preventDefault(); jumpToNextSegment(); break;
+                
+            }
+        });
+    });
+    </script></body></html>
